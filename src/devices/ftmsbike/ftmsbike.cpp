@@ -1077,6 +1077,8 @@ void ftmsbike::ftmsCharacteristicChanged(const QLowEnergyCharacteristic &charact
 
             b[3] = slope & 0xFF;
             b[4] = slope >> 8;
+            b[5] = 0;
+            b[6] = 0;
             
             qDebug() << "applying gears mod" << gears() << slope;
         /*} else if(b.at(0) == FTMS_SET_INDOOR_BIKE_SIMULATION_PARAMS && zwiftPlayService != nullptr && gears_zwift_ratio) {
@@ -1100,6 +1102,9 @@ void ftmsbike::ftmsCharacteristicChanged(const QLowEnergyCharacteristic &charact
             b[1] = power & 0xFF;
             b[2] = power >> 8;
             qDebug() << "applying gears mod" << gears() << gearsZwiftRatio() << power;
+        } else if(b.at(0) != FTMS_SET_INDOOR_BIKE_SIMULATION_PARAMS && b.at(0) != FTMS_SET_TARGET_POWER && gears_zwift_ratio) {
+            qDebug() << "ignoring this";
+            return;
         }
 
         writeCharacteristic((uint8_t*)b.data(), b.length(), "injectWrite ", false, true);
