@@ -1,0 +1,42 @@
+name: SBOM Syft and Grype
+on: push
+jobs: 
+  syft_grype:
+    runs-on: ubuntu-latest
+  
+    steps:
+    # checkout branch
+      - name: checkout
+        uses: actions/checkout@v4
+  
+      - name: Generate SBOM #syft SBOM generation
+        uses: anchore/sbom-action@v0
+        with:
+          format: spdx-json
+          artifact-name: spdx_syft.json
+          output-file: "spdx_syft.json"
+
+      - name: View SBOM #syft
+        run: cat "spdx_syft.json"
+
+      - name: Scan SBOM #grype scan SBOM
+        id: scan
+        uses: anchore/scan-action@v3
+        with:
+          sbom: "spdx_syft.json"
+          severity-cutoff: "low"
+
+      - name: View and Save Scan Report #save scan report to a file
+        if: always() # run even if scan fails
+        run: | 
+          cat '${{ steps.scan.outputs.sarif }}'
+          cp '${{ steps.scan.outputs.sarif }}' grype_syft_report.sarif
+      
+      - name: Upload SBOM and Scan Report as an Artifact
+        uses: actions/upload-artifact@v4
+        if: always() # run even if scan fails
+        with:
+          name: Reports
+          path: |
+            spdx_syft.json
+            grype_syft_report.sarif
