@@ -17,5 +17,5 @@ jobs:
           output-file: "opensbom.json"
 
       - name: View SBOM #syft
-        run: cat "spdx_syft.json"
+        run: cat "opensbom.json"
       
