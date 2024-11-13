@@ -1,0 +1,28 @@
+name: openSBOM
+on: push
+jobs: 
+  syft_grype:
+    runs-on: ubuntu-latest
+  
+    steps:
+    # checkout branch
+      - name: checkout
+        uses: actions/checkout@v4
+  
+      - name: Generate SBOM #syft SBOM generation
+        uses: anchore/sbom-action@v0
+        with:
+          format: spdx-json
+          artifact-name: spdx_syft.json
+          output-file: "spdx_syft.json"
+
+      - name: View SBOM #syft
+        run: cat "spdx_syft.json"
+      
+      - name: Upload SBOM and Scan Report as an Artifact
+        uses: actions/upload-artifact@v4
+        if: always() # run even if scan fails
+        with:
+          name: Reports
+          path: |
+            spdx_syft.json
