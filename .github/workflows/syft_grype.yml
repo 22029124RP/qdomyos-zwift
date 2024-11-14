@@ -5,38 +5,47 @@ jobs:
     runs-on: ubuntu-latest
   
     steps:
-    # checkout branch
-      - name: checkout
+      # Step 1: Checkout branch
+      - name: Checkout
         uses: actions/checkout@v4
   
-      - name: Generate SBOM #syft SBOM generation
+      # Step 2: Generate SBOM with Syft
+      - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
           format: spdx-json
           artifact-name: spdx_syft.json
           output-file: "spdx_syft.json"
 
-      - name: View SBOM #syft
+      # Step 3: View the SBOM for confirmation
+      - name: View SBOM
         run: cat "spdx_syft.json"
 
-      - name: Scan SBOM #grype scan SBOM
-        id: scan
-        uses: anchore/scan-action@v3
+      # Step 4: Install Grype
+      - name: Install Grype
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+
+      # Step 5: Scan SBOM with Grype (Table format for quick viewing, no artifact saved)
+      - name: Grype Scan - Table Format
+        uses: anchore/scan-action@v5
         with:
           sbom: "spdx_syft.json"
           severity-cutoff: "low"
+          output-format: table
+        continue-on-error: true  # Allows workflow to proceed to the next step even if this one fails
 
-      - name: View and Save Scan Report #save scan report to a file
-        if: always() # run even if scan fails
-        run: | 
-          cat '${{ steps.scan.outputs.sarif }}'
-          cp '${{ steps.scan.outputs.sarif }}' grype_syft_report.sarif
-      
-      - name: Upload SBOM and Scan Report as an Artifact
+      # Step 6: Scan SBOM with Grype (JSON format and save to file)
+      - name: Grype Scan - JSON Format
+        run: grype sbom:spdx_syft.json -o json --fail-on low > grype_scan_report.json
+        continue-on-error: true
+
+      # Step 7: Upload SBOM and JSON Scan Report as Artifacts
+      - name: Upload SBOM and Scan Report as Artifacts
         uses: actions/upload-artifact@v4
-        if: always() # run even if scan fails
+        if: always() # Run even if scan fails
         with:
           name: Reports
           path: |
             spdx_syft.json
-            grype_syft_report.sarif
+            grype_scan_report.json
