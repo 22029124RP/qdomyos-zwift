@@ -8,8 +8,12 @@ jobs:
       # Step 1: Checkout branch
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Step 2: List all files (long listing and hidden)
+      - name: List all files
+        run: ls -al
   
-      # Step 2: Generate SBOM with Syft
+      # Step 3: Generate SBOM with Syft
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
@@ -17,16 +21,16 @@ jobs:
           artifact-name: spdx_syft.json
           output-file: "spdx_syft.json"
 
-      # Step 3: View the SBOM for confirmation
+      # Step 4: View the SBOM for confirmation
       - name: View SBOM
         run: cat "spdx_syft.json"
 
-      # Step 4: Install Grype
+      # Step 5: Install Grype
       - name: Install Grype
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
 
-      # Step 5: Scan SBOM with Grype (Table format for quick viewing, no artifact saved)
+      # Step 6: Scan SBOM with Grype (Table format for quick viewing, no artifact saved)
       - name: Grype Scan - Table Format
         uses: anchore/scan-action@v5
         with:
@@ -35,12 +39,12 @@ jobs:
           output-format: table
         continue-on-error: true  # Allows workflow to proceed to the next step even if this one fails
 
-      # Step 6: Scan SBOM with Grype (JSON format and save to file)
+      # Step 7: Scan SBOM with Grype (JSON format and save to file)
       - name: Grype Scan - JSON Format
         run: grype sbom:spdx_syft.json -o json --fail-on low > grype_scan_report.json
         continue-on-error: true
 
-      # Step 7: Upload SBOM and JSON Scan Report as Artifacts
+      # Step 8: Upload SBOM and JSON Scan Report as Artifacts
       - name: Upload SBOM and Scan Report as Artifacts
         uses: actions/upload-artifact@v4
         if: always() # Run even if scan fails
