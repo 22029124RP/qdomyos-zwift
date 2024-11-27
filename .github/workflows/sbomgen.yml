@@ -1,0 +1,27 @@
+name: CyBeats
+on: push
+jobs: 
+  sbomgen:
+    runs-on: ubuntu-latest
+  
+    steps:
+    # checkout branch
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Install Tool
+        run: pip install jake
+
+      - name: Generate SBOM
+        run: jake sbom --output-format json -o sbomgen.json
+        
+      - name: Read SBOM
+        run: cat sbomgen.json
+        
+      - name: Scan SBOM #grype scan SBOM
+        id: scan
+        uses: anchore/scan-action@v5
+        with:
+          sbom: "sbomgen.json"
+          severity-cutoff: "low"
+          output-format: table
