@@ -6,7 +6,7 @@ jobs:
   
     steps:
     # checkout branch
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v4
   
       - name: Generate SBOM #syft SBOM generation
